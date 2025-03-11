@@ -1,22 +1,18 @@
-# A minimal example on how to use express for creating a CRUD endpoint that use Postgresql as data storage using docker compose
-
-Here's a minimal example of a CRUD API with Express.js, PostgreSQL, and Docker Compose:
+# A CRUD API using Express.js, TypeScript, PostgreSQL and Docker Compose.
 
 ## Project Structure
-
 ```
 crud-api/
 ├── docker-compose.yml
 ├── server/
 │   ├── package.json
-│   ├── index.js
-│   ├── db.js
-│   └── routes.js
+│   ├── tsconfig.json
+│   ├── index.ts
+│   ├── db.ts
+│   └── routes.ts
 ```
 
-
 ## 1. Docker Compose Setup (`docker-compose.yml`)
-
 ```yaml
 version: '3'
 services:
@@ -47,28 +43,43 @@ volumes:
   pgdata:
 ```
 
+## 2. TypeScript Configuration (`tsconfig.json`)
+```json
+{
+  "compilerOptions": {
+    "target": "es6",
+    "module": "commonjs",
+    "outDir": "./dist",
+    "strict": true,
+    "esModuleInterop": true,
+    "skipLibCheck": true,
+    "forceConsistentCasingInFileNames": true
+  },
+  "include": ["**/*.ts"],
+  "exclude": ["node_modules"]
+}
+```
 
-## 2. Express Server (`index.js`)
+## 3. Express Server (`index.ts`)
+```typescript
+import express from 'express';
+import { pool } from './db';
+import routes from './routes';
 
-```javascript
-const express = require('express');
-const { pool } = require('./db');
 const app = express();
 app.use(express.json());
 
-// Import routes
-require('./routes')(app);
+// Initialize routes
+routes(app);
 
 app.listen(3000, () => {
   console.log('Server running on port 3000');
 });
 ```
 
-
-## 3. Database Configuration (`db.js`)
-
-```javascript
-const { Pool } = require('pg');
+## 4. Database Configuration (`db.ts`)
+```typescript
+import { Pool } from 'pg';
 
 const pool = new Pool({
   user: process.env.DB_USER,
@@ -78,17 +89,16 @@ const pool = new Pool({
   port: 5432,
 });
 
-module.exports = { pool };
+export { pool };
 ```
 
+## 5. CRUD Routes (`routes.ts`)
+```typescript
+import { Request, Response, Express } from 'express';
+import { pool } from './db';
 
-## 4. CRUD Routes (`routes.js`)
-
-```javascript
-module.exports = (app) => {
-  const { pool } = require('./db');
-
-  // Create table
+export default (app: Express) => {
+  // Create table if it doesn't exist
   pool.query(`
     CREATE TABLE IF NOT EXISTS todos (
       id SERIAL PRIMARY KEY,
@@ -98,84 +108,106 @@ module.exports = (app) => {
   `);
 
   // CRUD Endpoints
-  app.get('/todos', async (req, res) => {
+
+  // Get all todos
+  app.get('/todos', async (req: Request, res: Response) => {
     const result = await pool.query('SELECT * FROM todos');
     res.json(result.rows);
   });
 
-  app.post('/todos', async (req, res) => {
+  // Create a new todo
+  app.post('/todos', async (req: Request, res: Response) => {
     const { task } = req.body;
     const result = await pool.query(
       'INSERT INTO todos (task) VALUES ($1) RETURNING *',
       [task]
     );
-    res.status(201).json(result.rows[^0]);
+    res.status(201).json(result.rows[0]);
   });
 
-  app.put('/todos/:id', async (req, res) => {
+  // Update a todo by ID
+  app.put('/todos/:id', async (req: Request, res: Response) => {
     const { id } = req.params;
     const { task, completed } = req.body;
     const result = await pool.query(
       'UPDATE todos SET task = $1, completed = $2 WHERE id = $3 RETURNING *',
       [task, completed, id]
     );
-    res.json(result.rows[^0]);
+    
+    if (result.rows.length === 0) {
+      return res.status(404).send('Todo not found');
+    }
+
+    res.json(result.rows[0]);
   });
 
-  app.delete('/todos/:id', async (req, res) => {
+  // Delete a todo by ID
+  app.delete('/todos/:id', async (req: Request, res: Response) => {
     const { id } = req.params;
-    await pool.query('DELETE FROM todos WHERE id = $1', [id]);
+    
+    const result = await pool.query('DELETE FROM todos WHERE id = $1 RETURNING *', [id]);
+    
+    if (result.rowCount === 0) {
+      return res.status(404).send('Todo not found');
+    }
+
     res.status(204).send();
   });
 };
 ```
 
-
-## 5. Package.json
-
+## 6. Package.json (`package.json`)
 ```json
 {
   "name": "crud-api",
   "version": "1.0.0",
   "main": "index.js",
   "scripts": {
-    "start": "node index.js",
-    "dev": "nodemon index.js"
+    "start": "ts-node src/index.ts",
+    "dev": "ts-node-dev --respawn src/index.ts",
+    "build": "tsc"
   },
   "dependencies": {
     "express": "^4.18.2",
     "pg": "^8.11.3"
   },
   "devDependencies": {
-    "nodemon": "^3.0.2"
+    "@types/express": "^4.17.13",
+    "@types/node": "^18.16.3",
+    "ts-node": "^10.9.1",
+    "ts-node-dev": "^2.0.0",
+    "typescript": "^5.0.4"
   }
 }
 ```
 
+## Usage Steps
 
-## Usage
+1. **Start Services**:
+   Run the following command in your terminal to build and start the services:
 
-1. Start services:
-```bash
-docker-compose up --build
-```
+   ```bash
+   docker-compose up --build
+   ```
 
-2. Test endpoints:
-```bash
-# Create todo
-curl -X POST -H "Content-Type: application/json" -d '{"task":"Learn Docker"}' http://localhost:3000/todos
+2. **Test Endpoints**:
+   You can use `curl` or any API client (like Postman) to test the endpoints:
 
-# Get all todos
-curl http://localhost:3000/todos
+   ```bash
+   # Create a new todo
+   curl -X POST -H "Content-Type: application/json" -d '{"task":"Learn TypeScript with Express"}' http://localhost:3000/todos
 
-# Update todo
-curl -X PUT -H "Content-Type: application/json" -d '{"task":"Learn Docker Compose", "completed":true}' http://localhost:3000/todos/1
+   # Get all todos
+   curl http://localhost:3000/todos
 
-# Delete todo
-curl -X DELETE http://localhost:3000/todos/1
-```
+   # Update a todo by ID (replace `1` with the actual ID)
+   curl -X PUT -H "Content-Type: application/json" -d '{"task":"Learn TypeScript with Express and PostgreSQL", "completed":true}' http://localhost:3000/todos/1
 
-This setup includes:
+   # Delete a todo by ID (replace `1` with the actual ID)
+   curl -X DELETE http://localhost:3000/todos/1
+   ```
+
+   This setup includes:
 
 - PostgreSQL container with persistent storage
 - Automatic table creation
@@ -230,4 +262,3 @@ The Docker Compose file manages both the PostgreSQL database and Express API ser
 [^21]: https://hashinteractive.com/blog/docker-compose-up-with-postgres-quick-tips/
 
 [^22]: https://geshan.com.np/blog/2021/12/docker-postgres/
-
