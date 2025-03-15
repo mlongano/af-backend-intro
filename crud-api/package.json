@@ -1,6 +1,7 @@
 {
  "scripts": {
-   "dev": "docker-compose -f docker-compose.dev.yml up --build",
-   "serve": "docker-compose -f docker-compose.prod.yml up --build"
+   "dev": "podman compose -f docker-compose.dev.yml up --build",
+   "down": "podman compose -f docker-compose.dev.yml down",
+   "serve": "podman compose -f docker-compose.prod.yml up --build"
  } 
 }
