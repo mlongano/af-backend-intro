@@ -66,6 +66,17 @@ app.get('/items', async (req: Request, res: Response) => {
   }
 });
 
+// Endpoint to fetch all items from the database
+app.get('/todos', async (req: Request, res: Response) => {
+  try {
+    const result = await pool.query('SELECT * FROM todos;');
+    res.json(result.rows);
+  } catch (err) {
+    console.error('Error fetching todos:', err);
+    res.status(500).json({ error: 'Internal Server Error' });
+  }
+});
+
 // Start the server after initializing the database  
 const PORT = process.env.PORT || 3000;
 initializeDatabase().then(() => {
