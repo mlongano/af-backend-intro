@@ -1,7 +1,14 @@
 {
- "scripts": {
-   "dev": "podman compose -f docker-compose.dev.yml up --build",
-   "down": "podman compose -f docker-compose.dev.yml down",
-   "serve": "podman compose -f docker-compose.prod.yml up --build"
- } 
+  "scripts": {
+    "postgres": "docker compose -f docker-compose.posgresql.yml up --build",
+    "app": "nodemon --watch 'server/src/**' --ext 'ts,json' --exec 'ts-node server/src/bootstrap.ts'",
+    "dev": "docker compose -f docker-compose.dev.yml up --build",
+    "down": "docker compose -f docker-compose.dev.yml down",
+    "serve": "docker compose -f docker-compose.prod.yml up --build -d",
+    "serve-down": "docker compose -f docker-compose.prod.yml down"
+  },
+  "devDependencies": {
+    "nodemon": "^3.1.9",
+    "ts-node": "^10.9.2"
+  }
 }
