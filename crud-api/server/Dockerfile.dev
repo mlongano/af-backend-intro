@@ -16,5 +16,6 @@ RUN npm install -g nodemon
 EXPOSE 3000
 
 # Start in development mode with nodemon (adjust command as needed)
-CMD ["nodemon", "src/index.ts"]
+# nodemon --watch 'server/src/**' --ext 'ts,json' --exec 'ts-node server/src/bootstrap.ts'
+CMD ["nodemon", "--legacy-watch", "src/**", "--ext", "ts,json", "--exec", "ts-node", "src/bootstrap.ts"]
 #CMD ["sh"]
