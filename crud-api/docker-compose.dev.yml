@@ -10,7 +10,7 @@ services:
       # Optionally, if you want to avoid overwriting node_modules installed in the container:
       # - /app/node_modules
     env_file:
-      - .env.development
+      - server/.env.development
     stdin_open: true
     tty: true
 
@@ -18,13 +18,13 @@ services:
     image: postgres:15
     restart: always
     env_file:
-      - .env.development
+      - server/.env.development
     ports:
       - "5432:5432"
     volumes:
       - pgdata:/var/lib/postgresql/data
       - ./init.sql:/docker-entrypoint-initdb.d/init.sql
-      
+
 
 volumes:
   pgdata:
