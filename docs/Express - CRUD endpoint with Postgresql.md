@@ -2,7 +2,7 @@
 
 ## Project Structure
 
-```
+```sh
 crud-api/
 ├── docker-compose.yml
 ├── server/
