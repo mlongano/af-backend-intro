@@ -36,3 +36,4 @@
 - [Setting up Express with Typescript](docs/Setting%20Up%20TypeScript%20with%20Express.md)
 - [A CRUD API using Express](./docs/Express%20-%20CRUD%20endpoint%20with%20Postgresql.md)
 - [Walkthrough: Creating API Endpoints](docs/Walkthrough:%20Creating%20API%20Endpoints.md)
+- [Frontend Fundamentals with React and TypeScript](docs/Session%202:%20Frontend%20Fundamentals%20with%20React%20and%20TypeScript.md)
